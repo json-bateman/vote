@@ -1,0 +1,33 @@
+:root {
+    --bs-body-font-family: "IBM Plex Mono", var(--bs-font-monospace);
+}
+
+/* Ties microlighter's light-dark() colors to our own theme toggle instead of
+   just the OS preference; html[data-bs-theme] beats the syntax theme's plain
+   attribute selector on specificity, so this wins the cascade. */
+html[data-bs-theme="light"] {
+    color-scheme: light;
+}
+
+html[data-bs-theme="dark"] {
+    color-scheme: dark;
+}
+
+#shortcuts-overlay.d-block {
+    background: oklch(0% 0 0 / 0.5);
+}
+
+/* .toast-container sets pointer-events:none for Bootstrap's own .toast
+   component (which opts back in itself); our toasts are plain .alert divs,
+   so they need to opt in here instead or nothing inside is clickable. */
+#toast-host .alert {
+    pointer-events: auto;
+}
+
+#toast-host .btn-close {
+    cursor: pointer;
+    margin-left: 0.5rem;
+    /* .btn-close sizes itself in em (width/height/background all "1em"), so
+       shrinking font-size shrinks the whole button and its X glyph together. */
+    font-size: 0.65rem;
+}

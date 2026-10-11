@@ -1,0 +1,141 @@
+package web
+
+// Base is the bare HTML document shell every page needs: head, scripts,
+// theme handling and toasts. Use it directly for full-screen pages.
+templ Base(title string) {
+	<!DOCTYPE html>
+	<html
+		data-signals="{theme: localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')}"
+		data-attr:data-bs-theme="$theme"
+		data-effect="localStorage.setItem('theme', $theme)"
+		data-on:keydown__window="hotkey(evt, 't') && ($theme = $theme === 'dark' ? 'light' : 'dark'); hotkey(evt, '?') && ($shortcutsOpen = !$shortcutsOpen)"
+		data-syntax-theme="bootstrap"
+		lang="en"
+	>
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<title>{ title }</title>
+			<!-- Need this IIFE to  run before CSS loads, prevents theme flash since D* is deferred with type="module" -->
+			<script>
+				(function () {
+					const theme =
+						localStorage.getItem("theme") ||
+						(window.matchMedia("(prefers-color-scheme: dark)").matches
+							? "dark"
+							: "light");
+					document.documentElement.setAttribute("data-bs-theme", theme);
+				})();
+				// True when `key` was pressed bare: no modifiers &
+				// not while typing in a form field. Shared by all data-on:keydown hotkeys.
+				window.hotkey = (evt, key) =>
+					evt.key === key &&
+					!evt.ctrlKey &&
+					!evt.metaKey &&
+					!evt.altKey &&
+					!evt.target.closest("input, textarea, select, [contenteditable]");
+			</script>
+			<link href={ StaticPath("images/rocket.png") } rel="icon" type="image/avif"/>
+			<link href={ StaticPath("css/fonts.css") } rel="stylesheet"/>
+			<link href={ StaticPath("css/bootstrap.min.css") } rel="stylesheet"/>
+			<link href={ StaticPath("css/app.css") } rel="stylesheet"/>
+			<link href={ StaticPath("css/microlighter-bootstrap.css") } rel="stylesheet"/>
+		</head>
+		<body class="d-flex flex-column min-vh-100" data-signals="{shortcutsOpen: false}">
+			<datastar-inspector></datastar-inspector>
+			@ShortcutsDialog()
+			<div id="toast-host" class="toast-container position-fixed top-0 end-0 p-3"></div>
+			{ children... }
+		</body>
+		<!-- Datastar Inspector: This requires a separate license, I have it .gitignored so will 404 in the console, just delete this line if you don't have it -->
+		<!-- If you do you need to place it into this path -->
+		<script type="module" src={ StaticPath("js/datastar-inspector.js") }></script>
+		<!-- Datastar v1.0.3 -->
+		<script type="module" src={ StaticPath("js/datastar.js") }></script>
+		<!-- MicroLighter v2.2.0 (auto-runner: highlights pre > code[class^="language-"] on load) -->
+		<script type="module" src={ StaticPath("js/microlighter/microlighter.min.js") }></script>
+	</html>
+}
+
+// Layout is Base plus the site header and footer.
+templ Layout(title, version string) {
+	@Base(title) {
+		<header class="d-flex justify-content-between align-items-center gap-2 p-2">
+			<nav class="d-flex gap-3">
+				<a href="/" class="link-body-emphasis">Vote</a>
+				<a href="/results" class="link-body-emphasis">Results</a>
+			</nav>
+			<div class="d-flex gap-2">
+				<button
+					type="button"
+					class="btn btn-outline-secondary btn-sm"
+					data-on:click="$theme = $theme === 'dark' ? 'light' : 'dark'"
+					data-attr:aria-label="$theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'"
+					title="Toggle theme (t)"
+				>
+					<span data-show="$theme === 'dark'">☀️</span>
+					<span data-show="$theme === 'light'">🌙</span>
+				</button>
+				<button
+					id="shortcuts-toggle"
+					type="button"
+					class="btn btn-outline-secondary btn-sm"
+					aria-label="Keyboard shortcuts"
+					aria-haspopup="dialog"
+					title="Keyboard shortcuts (?)"
+					data-on:click="$shortcutsOpen = true"
+				>?</button>
+			</div>
+		</header>
+		{ children... }
+		<footer class="mt-auto py-2 bg-body-tertiary text-center text-secondary">Commit: { version }</footer>
+	}
+}
+
+templ ShortcutsDialog() {
+	<div
+		id="shortcuts-overlay"
+		class="modal d-none"
+		data-class="{'d-block': $shortcutsOpen, 'd-none': !$shortcutsOpen}"
+	>
+		<div
+			id="shortcuts-dialog"
+			class="modal-dialog modal-dialog-centered"
+			role="dialog"
+			aria-modal="true"
+			aria-labelledby="shortcuts-title"
+			data-on:click__outside="!evt.target.closest('#shortcuts-toggle') && ($shortcutsOpen = false)"
+			data-on:keydown__window="evt.key === 'Escape' && ($shortcutsOpen = false)"
+		>
+			<div class="modal-content">
+				<div class="modal-header">
+					<h3 class="modal-title fs-5" id="shortcuts-title">Keyboard Shortcuts</h3>
+					<button
+						type="button"
+						class="btn-close"
+						aria-label="Close"
+						data-on:click="$shortcutsOpen = false"
+					></button>
+				</div>
+				<div class="modal-body">
+					<table class="table table-borderless mb-0">
+						<tbody>
+							<tr>
+								<td class="w-25"><kbd>t</kbd></td>
+								<td>Toggle light / dark theme</td>
+							</tr>
+							<tr>
+								<td><kbd>?</kbd></td>
+								<td>Open / close this dialog</td>
+							</tr>
+							<tr>
+								<td><kbd>Esc</kbd></td>
+								<td>Close this dialog</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+}

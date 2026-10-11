@@ -1,0 +1,20 @@
+package web
+
+import "vote/sql/sqlcgen"
+
+templ resultsTempl(text string) {
+	@Layout("Home", Version) {
+		<main class="flex-grow-1 d-flex flex-column" data-init="@get('/sse/results')">
+			<h3>{ text }</h3>
+			@voteLineGraph(nil)
+		</main>
+	}
+}
+
+// voteLineGraph is patched over SSE by id, so its root element must keep id="vote-graph".
+templ voteLineGraph(votes []sqlcgen.GetAllVotesRow) {
+	<div id="vote-graph">
+		// Generate a line graph somehow with these votes
+		<p>{ len(votes) } votes</p>
+	</div>
+}

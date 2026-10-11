@@ -1,0 +1,47 @@
+version: '3'
+
+tasks:
+  setup:
+    desc: Install/update pinned dev tools from go.mod
+    cmds:
+      - go get -tool github.com/air-verse/air
+      - go get -tool github.com/a-h/templ/cmd/templ
+      - go get -tool github.com/sqlc-dev/sqlc/cmd/sqlc
+      - go mod tidy
+
+  sqlc:
+    cmds:
+      # sqlc never deletes output for removed query files, so clear it first
+      - rm -f sql/sqlcgen/*.go
+      - go tool sqlc generate
+    sources:
+      - sql/queries/*.sql
+      - sql/migrations/*.sql
+      - sqlc.yaml
+    generates:
+      - sql/sqlcgen/*.go
+
+  templ:build:
+    desc: Generate templ files
+    cmd: go tool templ generate
+
+  go:build:
+    desc: Build the web server for production
+    deps: [templ:build, sqlc]
+    cmds:
+      - mkdir -p ./release
+      - go build -ldflags "-X vote/web.Version=$(git describe --tags --always)" -o ./release/app ./cmd/app
+      - echo "Release built in ./release/"
+
+  clean:
+    desc: Clean build artifacts
+    cmds:
+      - rm -rf ./tmp
+      - rm -rf ./release
+      - find . -name "*_templ.go" -delete
+
+  default:
+    desc: Run and watch with air
+    deps: [sqlc]
+    cmds:
+      - go tool air
