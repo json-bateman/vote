@@ -53,8 +53,13 @@ html[data-bs-theme="dark"] {
     border-radius: 1px;
 }
 
-.vg-key-cheer { background: var(--vg-cheer); }
-.vg-key-boo { background: var(--vg-boo); }
+.vg-key-cheer {
+    background: var(--vg-cheer);
+}
+
+.vg-key-boo {
+    background: var(--vg-boo);
+}
 
 .vg-total {
     font-size: 2.5rem;

@@ -10,7 +10,6 @@ templ resultsTempl(text string, t Timeline) {
 			data-init="@get('/sse/results')"
 		>
 			<h3>{ text }</h3>
-			// The totals double as the chart legend
 			<div id="vote-totals" class="d-flex gap-5 mb-2">
 				<div>
 					<div class="text-secondary"><span class="vg-key vg-key-cheer"></span>Cheers</div>
@@ -32,5 +31,8 @@ templ resultsTempl(text string, t Timeline) {
 				data-effect="renderVoteChart(el, $_chartJson, $theme)"
 			></div>
 		</main>
+		<!-- ECharts v5.6.0 -->
+		<script defer src={ StaticPath("js/echarts.min.js") }></script>
+		<script defer src={ StaticPath("js/vote-chart.js") }></script>
 	}
 }

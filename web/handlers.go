@@ -16,7 +16,7 @@ import (
 
 func resultsPage() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if err := resultsTempl("").Render(r.Context(), w); err != nil {
+		if err := resultsTempl("", Timeline{}).Render(r.Context(), w); err != nil {
 			slog.Debug("render error", "component", "NatsSqlite", "err", err)
 		}
 	}

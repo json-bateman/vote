@@ -39,7 +39,6 @@ templ Base(title string) {
 			<link href={ StaticPath("css/fonts.css") } rel="stylesheet"/>
 			<link href={ StaticPath("css/bootstrap.min.css") } rel="stylesheet"/>
 			<link href={ StaticPath("css/app.css") } rel="stylesheet"/>
-			<link href={ StaticPath("css/microlighter-bootstrap.css") } rel="stylesheet"/>
 		</head>
 		<body class="d-flex flex-column min-vh-100" data-signals="{shortcutsOpen: false}">
 			<datastar-inspector></datastar-inspector>
@@ -47,9 +46,6 @@ templ Base(title string) {
 			<div id="toast-host" class="toast-container position-fixed top-0 end-0 p-3"></div>
 			{ children... }
 		</body>
-		<!-- ECharts v5.6.0 + the results chart glue. Plain scripts run during parsing, before Datastar's deferred module starts its effects -->
-		<script src={ StaticPath("js/echarts.min.js") }></script>
-		<script src={ StaticPath("js/vote-chart.js") }></script>
 		<!-- Datastar Inspector: This requires a separate license, I have it .gitignored so will 404 in the console, just delete this line if you don't have it -->
 		<!-- If you do you need to place it into this path -->
 		<script type="module" src={ StaticPath("js/datastar-inspector.js") }></script>
