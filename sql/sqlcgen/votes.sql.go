@@ -111,3 +111,42 @@ func (q *Queries) GetVotesByVoterId(ctx context.Context, voterID string) (Vote, 
 	)
 	return i, err
 }
+
+const getVotesPerSecond = `-- name: GetVotesPerSecond :many
+SELECT created_at,
+       CAST(SUM(vote) AS INTEGER) AS cheers,
+       CAST(COUNT(*) - SUM(vote) AS INTEGER) AS boos
+FROM votes
+GROUP BY created_at
+ORDER BY created_at
+`
+
+type GetVotesPerSecondRow struct {
+	CreatedAt int64 `json:"created_at"`
+	Cheers    int64 `json:"cheers"`
+	Boos      int64 `json:"boos"`
+}
+
+// Pre-aggregated per second; Go buckets these into the chart's time chunks.
+func (q *Queries) GetVotesPerSecond(ctx context.Context) ([]GetVotesPerSecondRow, error) {
+	rows, err := q.db.QueryContext(ctx, getVotesPerSecond)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetVotesPerSecondRow{}
+	for rows.Next() {
+		var i GetVotesPerSecondRow
+		if err := rows.Scan(&i.CreatedAt, &i.Cheers, &i.Boos); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

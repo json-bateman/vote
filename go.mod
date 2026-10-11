@@ -7,6 +7,7 @@ require (
 	github.com/benbjohnson/hashfs v0.2.2
 	github.com/go-chi/chi v1.5.5
 	github.com/go-chi/chi/v5 v5.3.2
+	github.com/go-echarts/go-echarts/v2 v2.7.3
 	github.com/joho/godotenv v1.5.1
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/nats-io/nats-server/v2 v2.14.6

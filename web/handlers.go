@@ -31,29 +31,32 @@ func sseResults(db *sql.DB) http.HandlerFunc {
 		ticker := time.NewTicker(100 * time.Millisecond)
 		defer ticker.Stop()
 
-		lastCount := int64(-1)
-		// render sends a new frame if the vote count changed since the last one.
+		// render sends a new frame, and signals every 100ms
 		render := func() error {
-			count, err := q.CountVotes(r.Context())
-			if err != nil || count == lastCount {
-				return err
-			}
-			votes, err := q.GetAllVotes(r.Context())
+			rows, err := q.GetVotesPerSecond(r.Context())
 			if err != nil {
 				return err
 			}
-			lastCount = count
-			return sse.PatchElementTempl(voteLineGraph(votes))
+
+			t := buildTimeline(rows, time.Now())
+			chartJSON, err := t.EChartsOptions()
+			if err != nil {
+				return err
+			}
+			if err := sse.PatchElementTempl(resultsTempl("", t)); err != nil {
+				return err
+			}
+			// The chart is drawn client-side; vote-chart.js picks this signal up
+			return sse.MarshalAndPatchSignals(map[string]string{"_chartJson": string(chartJSON)})
 		}
 
 		for {
-			// First frame right away instead of waiting for the first tick
-			if err := render(); err != nil {
-				slog.Debug("sse results ended", "err", err)
-				return
-			}
 			select {
-			case <-ticker.C: // waits here before the next render
+			case <-ticker.C:
+				if err := render(); err != nil {
+					slog.Debug("sse results ended", "err", err)
+					return
+				}
 			case <-r.Context().Done():
 				return
 			}

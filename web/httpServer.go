@@ -17,7 +17,6 @@ import (
 	"github.com/benbjohnson/hashfs"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
-	"github.com/nats-io/nats.go"
 )
 
 //go:embed static/*
@@ -58,7 +57,7 @@ func withDefaultCache(next http.Handler) http.Handler {
 	})
 }
 
-func setupRoutes(db *sql.DB, nc *nats.Conn) chi.Router {
+func setupRoutes(db *sql.DB) chi.Router {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
@@ -94,7 +93,7 @@ func RunBlocking(setupCtx context.Context, db *sql.DB) error {
 	}
 	defer nc.Close()
 
-	router := setupRoutes(db, nc)
+	router := setupRoutes(db)
 
 	addr := fmt.Sprintf(":%d", vote.Env.Port)
 	srv := http.Server{

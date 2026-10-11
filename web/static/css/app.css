@@ -31,3 +31,33 @@ html[data-bs-theme="dark"] {
        shrinking font-size shrinks the whole button and its X glyph together. */
     font-size: 0.65rem;
 }
+
+/* Results totals. Colors match the chart's series colors, which live in
+   static/js/vote-chart.js; green/red was checked for colorblind separation
+   against Bootstrap's backgrounds and the lines are also labeled by name. */
+#vote-totals {
+    --vg-cheer: #008300;
+    --vg-boo: #e34948;
+}
+
+[data-bs-theme="dark"] #vote-totals {
+    --vg-boo: #e66767;
+}
+
+.vg-key {
+    display: inline-block;
+    width: 14px;
+    height: 2px;
+    margin-right: 6px;
+    vertical-align: middle;
+    border-radius: 1px;
+}
+
+.vg-key-cheer { background: var(--vg-cheer); }
+.vg-key-boo { background: var(--vg-boo); }
+
+.vg-total {
+    font-size: 2.5rem;
+    font-weight: 600;
+    line-height: 1.1;
+}

@@ -1,44 +1,31 @@
 # vote
 
-A minimal starter for [Datastar](https://data-star.dev) apps in Go: [chi](https://github.com/go-chi/chi) router, [templ](https://templ.guide) views, self-hosted fonts, Bootstrap 5.
+Live audience voting for presentations. People open `/` on their phones and tap **Cheer** or **Boo** as often as they like; `/results` streams the tally to the projector in near real time.
+
+## How it works
+
+- `POST /vote/{cheer|boo}` saves a row in SQLite. Voters are identified by a random `voter_id` cookie (no login).
+- `/results` opens a Datastar SSE stream (`/sse/results`) that checks for new votes every 100ms. When something changed it patches the totals and sends new [ECharts](https://echarts.apache.org) options (built with [go-echarts](https://github.com/go-echarts/go-echarts)) in a signal, which `static/js/vote-chart.js` draws: 5s chunks over the last 5 minutes.
 
 ## Stack
 
-- **Router:** chi
-- **Views:** templ
-- **Frontend:** Datastar (client lib in `web/static/js`), 
-- **Styling** Bootstrap 5 and IBMPlexMono for the font because it's awesome
-- **Static assets:** embedded in the binary, served content-hashed (`hashfs`) for aggressive caching
-- **Dev loop:** `air` (rebuild + reload on save)
-- **Task runner:** [Task](https://taskfile.dev) (`Taskfile.yml`)
+- **Go** + [chi](https://github.com/go-chi/chi) router
+- [templ](https://templ.guide) views, [Datastar](https://data-star.dev) for SSE/hypermedia, Bootstrap 5
+- **SQLite** with [goose](https://github.com/pressly/goose) migrations (`sql/migrations`) and [sqlc](https://sqlc.dev) queries (`sql/queries` → `sql/sqlcgen`)
+- [air](https://github.com/air-verse/air) hot reload, [Task](https://taskfile.dev) runner; tools pinned via `go.mod`'s `tool` block
 
 ## Running
 
 ```sh
-task setup      # install pinned tool deps (air, templ) and tidy go.mod
-task            # run the dev server with hot reload (default task)
-```
-Server listens on `:59876` by default (override with `PORT` in `.env` or the environment).
-
-## File naming convention
-
-Inside `web/`:
-
-- `p_*.templ` — a **page**: a full route's top-level template (e.g. `p_home.templ`, `p_404.templ`)
-- `pc_*.templ` — a **page component**: shared/reusable pieces pages are built from (e.g. `pc_layout.templ`)
-
-## Building for production
-
-```sh
-task go:build
+task setup   # install pinned tools
+task         # dev server with hot reload on http://localhost:59876
 ```
 
-## Adding a page
+Config via `.env` or environment: `PORT` (default `59876`), `DB_PATH` (default `./data/app.db`).
 
-1. Add `web/p_<name>.templ`
-2. Register its route in `web/httpServer.go` (`setupRoutes`).
-3. Reference any new static assets via `StaticPath("css/foo.css")` / `StaticPath("js/foo.js")` — never link static files directly, so caching stays correct.
+Migrations run on startup. Editing an already-applied migration does nothing; add a new `00N_*.sql`, or in dev delete `data/app.db*` to rebuild.
 
-## Based on
+## Layout
 
-The `nats-sqlite` branch of [datastar-template](https://github.com/json-bateman/datastar-template), using [NATS](https://github.com/nats-io/nats.go) and [sqlite3](https://www.sqlite.org/lang.html)
+- `web/p_*.templ`: pages; `web/pc_*.templ`: shared components
+- `Base` is the bare HTML shell (full-screen pages like voting); `Layout` adds the header and footer
