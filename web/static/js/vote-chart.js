@@ -1,6 +1,6 @@
 // Draws the results chart with ECharts. The server streams option JSON in the
 // $_chartJson signal; this applies it with the colors for the current theme.
-// Called from a data-effect, so it reruns whenever the JSON or $theme changes.
+// Called from a data-effect, so it reruns whenever the JSON, $theme or $_buckets changes.
 
 // Keep in sync with --vg-cheer / --vg-boo in app.css
 const votePalette = {
@@ -8,8 +8,13 @@ const votePalette = {
     dark: ["#008300", "#e66767"],
 };
 
-window.renderVoteChart = (el, json, theme) => {
+window.renderVoteChart = (el, json, theme, buckets) => {
     if (!json) return;
+    const option = JSON.parse(json);
+
+    // The server always sends the last hour; keep only this viewer's window
+    for (const axis of [].concat(option.xAxis)) axis.data = axis.data?.slice(-buckets);
+    for (const s of option.series) s.data = s.data.slice(-buckets);
 
     // ECharts themes are fixed at init, so a theme toggle means a fresh instance
     if (el._chart && el._theme !== theme) {
@@ -26,7 +31,7 @@ window.renderVoteChart = (el, json, theme) => {
     }
 
     el._chart.setOption({
-        ...JSON.parse(json),
+        ...option,
         color: votePalette[theme] ?? votePalette.light,
         backgroundColor: "transparent",
         textStyle: { fontFamily: getComputedStyle(document.body).fontFamily },

@@ -117,6 +117,7 @@ SELECT created_at,
        CAST(SUM(vote) AS INTEGER) AS cheers,
        CAST(COUNT(*) - SUM(vote) AS INTEGER) AS boos
 FROM votes
+WHERE created_at >= ?1
 GROUP BY created_at
 ORDER BY created_at
 `
@@ -127,9 +128,8 @@ type GetVotesPerSecondRow struct {
 	Boos      int64 `json:"boos"`
 }
 
-// Pre-aggregated per second; Go buckets these into the chart's time chunks.
-func (q *Queries) GetVotesPerSecond(ctx context.Context) ([]GetVotesPerSecondRow, error) {
-	rows, err := q.db.QueryContext(ctx, getVotesPerSecond)
+func (q *Queries) GetVotesPerSecond(ctx context.Context, since int64) ([]GetVotesPerSecondRow, error) {
+	rows, err := q.db.QueryContext(ctx, getVotesPerSecond, since)
 	if err != nil {
 		return nil, err
 	}

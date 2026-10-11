@@ -16,7 +16,7 @@ import (
 
 func resultsPage() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if err := resultsTempl("", Timeline{}).Render(r.Context(), w); err != nil {
+		if err := resultsTempl(Timeline{}).Render(r.Context(), w); err != nil {
 			slog.Debug("render error", "component", "NatsSqlite", "err", err)
 		}
 	}
@@ -27,23 +27,23 @@ func sseResults(db *sql.DB) http.HandlerFunc {
 		sse := datastar.NewSSE(w, r, datastar.WithCompression(datastar.WithBrotli()))
 		q := sqlcgen.New(db)
 
-		// Tick every 100ms, batching any votes that arrived since the last frame
 		ticker := time.NewTicker(100 * time.Millisecond)
 		defer ticker.Stop()
 
-		// render sends a new frame, and signals every 100ms
+		// render sends a new frame
 		render := func() error {
-			rows, err := q.GetVotesPerSecond(r.Context())
+			start := windowStart(time.Now(), sentBuckets)
+			rows, err := q.GetVotesPerSecond(r.Context(), start)
 			if err != nil {
 				return err
 			}
 
-			t := buildTimeline(rows, time.Now())
+			t := buildTimeline(rows, start, sentBuckets)
 			chartJSON, err := t.EChartsOptions()
 			if err != nil {
 				return err
 			}
-			if err := sse.PatchElementTempl(resultsTempl("", t)); err != nil {
+			if err := sse.PatchElementTempl(resultsTempl(t)); err != nil {
 				return err
 			}
 			// The chart is drawn client-side; vote-chart.js picks this signal up

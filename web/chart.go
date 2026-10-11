@@ -11,31 +11,31 @@ import (
 )
 
 const (
-	bucketSecs = 5  // each point on the chart is 5 seconds of votes
-	maxBuckets = 60 // rolling window: the chart shows the last 5 minutes
+	bucketSecs  = 5   // each point on the chart is 5 seconds of votes
+	sentBuckets = 720 // always send the last hour; each viewer trims it to their window
 )
 
-// Timeline is the votes bucketed into 5s chunks for the chart, plus all-time totals.
 type Timeline struct {
 	Labels                 []string
 	Cheers, Boos           []int64
 	TotalCheers, TotalBoos int64
 }
 
-// buildTimeline fills a fixed 5-minute window ending at now, so the chart
-// scrolls left every 5s even when nobody is voting. Totals still count every
-// vote, not just the window's.
-func buildTimeline(rows []sqlcgen.GetVotesPerSecondRow, now time.Time) Timeline {
+func windowStart(now time.Time, maxBuckets int64) int64 {
+	end := now.Unix() / bucketSecs * bucketSecs // round down to the start of the current bucket (integer division drops the remainder)
+	return end - (maxBuckets-1)*bucketSecs
+}
+
+func buildTimeline(rows []sqlcgen.GetVotesPerSecondRow, start, maxBuckets int64) Timeline {
 	const size = bucketSecs
-	end := now.Unix() / size * size
-	start := end - (maxBuckets-1)*size
 
 	t := Timeline{Cheers: make([]int64, maxBuckets), Boos: make([]int64, maxBuckets)}
 	for _, r := range rows {
 		t.TotalCheers += r.Cheers
 		t.TotalBoos += r.Boos
-		i := (r.CreatedAt/size*size - start) / size
-		if i < 0 || i >= maxBuckets { // older than the window, or clock skew
+		bucket := r.CreatedAt / size * size // round down to the bucket's start: :17 → :15
+		i := (bucket - start) / size        // slots after the first one
+		if i >= maxBuckets {
 			continue
 		}
 		t.Cheers[i] += r.Cheers
@@ -44,14 +44,13 @@ func buildTimeline(rows []sqlcgen.GetVotesPerSecondRow, now time.Time) Timeline 
 
 	t.Labels = make([]string, maxBuckets)
 	for i := range maxBuckets {
-		t.Labels[i] = time.Unix(start+int64(i)*size, 0).Local().Format("15:04:05")
+		t.Labels[i] = time.Unix(start+int64(i)*size, 0).Local().Format("04:05")
 	}
+
 	return t
 }
 
-// EChartsOptions returns the ECharts option JSON for the timeline. Colors and
-// fonts are left out on purpose: the page applies them per theme, so the server
-// doesn't need to know whether the viewer is in light or dark mode.
+// EChartsOptions returns the ECharts option JSON for the timeline.
 func (t Timeline) EChartsOptions() ([]byte, error) {
 	line := charts.NewLine()
 	line.SetGlobalOptions(
@@ -75,7 +74,8 @@ func (t Timeline) EChartsOptions() ([]byte, error) {
 
 	line.Accept(endLabelVisitor{})
 	line.Validate()
-	return json.Marshal(line.JSON())
+	l := line.JSON()
+	return json.Marshal(l)
 }
 
 func lineData(vals []int64) []opts.LineData {
@@ -87,8 +87,6 @@ func lineData(vals []int64) []opts.LineData {
 }
 
 // endLabelVisitor adds ECharts' endLabel (series name at the end of each line),
-// which go-echarts has no option for. Green vs red is hard to tell apart for
-// red-blind viewers, so the lines carry their names as well as their colors.
 type endLabelVisitor struct {
 	charts.BaseConfigurationVisitor
 }
