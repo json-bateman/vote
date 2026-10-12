@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <style>
+    .body{fill:#343a40}.lid{fill:#212529}.slot{fill:#000}.label{fill:#f8f9fa}
+    @media (prefers-color-scheme:dark){.body{fill:#ced4da}.lid{fill:#f8f9fa}.slot{fill:#495057}.label{fill:#495057}}
+  </style>
+  <g transform="rotate(-10 11.5 16)">
+    <rect x="7.5" y="1.5" width="8" height="14.5" rx="1" fill="#008300"/>
+    <path d="M9.5 5h4M9.5 8h4" stroke="#fff" stroke-opacity=".75" stroke-width="1.5" stroke-linecap="round"/>
+  </g>
+  <g transform="rotate(10 20.5 16)">
+    <rect x="16.5" y="1.5" width="8" height="14.5" rx="1" fill="#e34948"/>
+    <path d="M18.5 5h4M18.5 8h4" stroke="#fff" stroke-opacity=".75" stroke-width="1.5" stroke-linecap="round"/>
+  </g>
+  <rect class="body" x="4" y="17" width="24" height="14" rx="2"/>
+  <rect class="lid" x="2" y="13" width="28" height="5" rx="1.5"/>
+  <rect class="slot" x="6" y="13" width="20" height="2" rx="1"/>
+  <rect class="label" x="11" y="21.5" width="10" height="5" rx="1"/>
+</svg>

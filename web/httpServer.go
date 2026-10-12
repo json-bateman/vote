@@ -12,8 +12,6 @@ import (
 	"strings"
 	"vote"
 
-	"vote/natsrv"
-
 	"github.com/benbjohnson/hashfs"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
@@ -87,12 +85,6 @@ func RunBlocking(setupCtx context.Context, db *sql.DB) error {
 	if Version == "dev" {
 		Version = getVersion()
 	}
-	ns, nc, err := natsrv.StartNats()
-	if err != nil {
-		return fmt.Errorf("start nats: %w", err)
-	}
-	defer nc.Close()
-
 	router := setupRoutes(db)
 
 	addr := fmt.Sprintf(":%d", vote.Env.Port)
@@ -107,8 +99,6 @@ func RunBlocking(setupCtx context.Context, db *sql.DB) error {
 		if err := srv.Shutdown(context.Background()); err != nil {
 			log.Printf("Error shutting down server: %v", err)
 		}
-		ns.Shutdown()
-		ns.WaitForShutdown()
 	}()
 
 	log.Printf("Starting server on http://localhost%s", addr)

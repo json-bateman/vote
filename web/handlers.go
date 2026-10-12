@@ -27,7 +27,7 @@ func sseResults(db *sql.DB) http.HandlerFunc {
 		sse := datastar.NewSSE(w, r, datastar.WithCompression(datastar.WithBrotli()))
 		q := sqlcgen.New(db)
 
-		ticker := time.NewTicker(100 * time.Millisecond)
+		ticker := time.NewTicker(500 * time.Millisecond)
 		defer ticker.Stop()
 
 		// render sends a new frame

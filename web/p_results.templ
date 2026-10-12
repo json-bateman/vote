@@ -20,7 +20,6 @@ templ resultsTempl(t Timeline) {
 				</div>
 			</div>
 			// _buckets is local to this tab (underscore signals aren't sent to the server).
-			// The morph would reset the select every frame, so it skips this block
 			<div class="d-flex align-items-center gap-2 mb-1" data-ignore-morph>
 				<span class="text-secondary small">Votes per 5s, last</span>
 				<select class="form-select form-select-sm w-auto" data-bind:_buckets>
@@ -30,18 +29,20 @@ templ resultsTempl(t Timeline) {
 					<option value="720">1 hour</option>
 				</select>
 			</div>
-			// ECharts draws inside this element, so the morph must skip it; the chart is
-			// redrawn from the $_chartJson signal instead
-			<div
+			// The morph would strip the client-set attributes below every frame, so it
+			// skips this element; ECharts draws in the component's shadow root
+			<vote-chart
 				id="vote-chart"
 				class="flex-grow-1"
 				style="min-height: 320px"
 				data-ignore-morph
-				data-effect="renderVoteChart(el, $_chartJson, $theme, $_buckets)"
-			></div>
+				data-attr:option="$_chartJson"
+				data-attr:theme="$theme === 'dark' ? 'dark' : 'default'"
+				data-attr:buckets="$_buckets"
+			></vote-chart>
 		</main>
-		<!-- ECharts v5.6.0 -->
+		<!-- ECharts v5.6.0, sets window.echarts. Deferred scripts run before module scripts that come later, so it's ready for vote-chart.js -->
 		<script defer src={ StaticPath("js/echarts.min.js") }></script>
-		<script defer src={ StaticPath("js/vote-chart.js") }></script>
+		<script type="module" src={ StaticPath("js/vote-chart.js") }></script>
 	}
 }

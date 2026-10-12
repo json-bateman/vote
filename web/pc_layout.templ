@@ -35,7 +35,12 @@ templ Base(title string) {
 					!evt.altKey &&
 					!evt.target.closest("input, textarea, select, [contenteditable]");
 			</script>
-			<link href={ StaticPath("images/rocket.png") } rel="icon" type="image/avif"/>
+			<link href={ StaticPath("icons/ballot-box.svg") } rel="icon" type="image/svg+xml"/>
+			// Lets modules `import { rocket } from 'datastar'`. It must point at the same hashed
+			// URL as the <script> below, or the browser loads a second, separate Datastar
+			@templ.JSONScript("", map[string]any{
+				"imports": map[string]string{"datastar": StaticPath("js/datastar.js")},
+			}).WithType("importmap")
 			<link href={ StaticPath("css/fonts.css") } rel="stylesheet"/>
 			<link href={ StaticPath("css/bootstrap.min.css") } rel="stylesheet"/>
 			<link href={ StaticPath("css/app.css") } rel="stylesheet"/>
@@ -49,7 +54,7 @@ templ Base(title string) {
 		<!-- Datastar Inspector: This requires a separate license, I have it .gitignored so will 404 in the console, just delete this line if you don't have it -->
 		<!-- If you do you need to place it into this path -->
 		<script type="module" src={ StaticPath("js/datastar-inspector.js") }></script>
-		<!-- Datastar v1.0.3 -->
+		<!-- Datastar v1.0.4 + Rocket (bundles/datastar-rocket.js) -->
 		<script type="module" src={ StaticPath("js/datastar.js") }></script>
 	</html>
 }
