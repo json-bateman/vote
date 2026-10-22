@@ -14,6 +14,8 @@ import (
 	"github.com/starfederation/datastar-go/datastar"
 )
 
+var TickInterval = 300 * time.Millisecond
+
 func resultsPage() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := resultsTempl(Timeline{}).Render(r.Context(), w); err != nil {
@@ -24,10 +26,10 @@ func resultsPage() http.HandlerFunc {
 
 func sseResults(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		sse := datastar.NewSSE(w, r, datastar.WithCompression(datastar.WithBrotli()))
+		sse := datastar.NewSSE(w, r, datastar.WithCompression(datastar.WithBrotli(datastar.WithBrotliLevel(2), datastar.WithBrotliLGWin(16))))
 		q := sqlcgen.New(db)
 
-		ticker := time.NewTicker(500 * time.Millisecond)
+		ticker := time.NewTicker(TickInterval)
 		defer ticker.Stop()
 
 		// render sends a new frame
